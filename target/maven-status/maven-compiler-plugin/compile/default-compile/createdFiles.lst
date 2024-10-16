@@ -1,0 +1,3 @@
+org/example/models/Point.class
+org/example/beans/CalculatorBean.class
+org/example/tools/DBCommunicator.class
