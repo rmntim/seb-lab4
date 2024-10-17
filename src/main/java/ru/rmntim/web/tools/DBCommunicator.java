@@ -1,8 +1,9 @@
-package org.example.tools;
+package ru.rmntim.web.tools;
 
-import org.example.models.Point;
-
-import jakarta.persistence.*;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Persistence;
+import jakarta.persistence.PersistenceContext;
+import ru.rmntim.web.models.Point;
 
 import java.io.Serializable;
 import java.util.ArrayList;

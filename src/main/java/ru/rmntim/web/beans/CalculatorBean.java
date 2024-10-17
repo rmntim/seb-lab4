@@ -1,13 +1,13 @@
-package org.example.beans;
-
-import lombok.Getter;
-import lombok.Setter;
-import org.example.models.Point;
-import org.example.tools.DBCommunicator;
+package ru.rmntim.web.beans;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.inject.Named;
+import lombok.Getter;
+import lombok.Setter;
+import ru.rmntim.web.models.Point;
+import ru.rmntim.web.tools.DBCommunicator;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 
@@ -54,9 +54,10 @@ public class CalculatorBean implements Serializable {
     }
 
     public void setX(double x) {
-        this.x = ((Long)Math.round(x * 1000)).doubleValue()/1000;
+        this.x = ((Long) Math.round(x * 1000)).doubleValue() / 1000;
     }
+
     public void setY(double y) {
-        this.y = ((Long)Math.round(y * 1000)).doubleValue()/1000;
+        this.y = ((Long) Math.round(y * 1000)).doubleValue() / 1000;
     }
 }
