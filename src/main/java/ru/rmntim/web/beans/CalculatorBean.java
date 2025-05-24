@@ -1,19 +1,27 @@
 package ru.rmntim.web.beans;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.Destroyed;
 import jakarta.enterprise.context.SessionScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Named;
 import lombok.Getter;
 import lombok.Setter;
 import ru.rmntim.web.models.Point;
 import ru.rmntim.web.tools.DBCommunicator;
+import ru.rmntim.web.tools.MBeanRegistryUtil;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
-@Named("calculatorBean")
+import javax.management.AttributeChangeNotification;
+import javax.management.MBeanNotificationInfo;
+import javax.management.Notification;
+import javax.management.NotificationBroadcasterSupport;
+
+@Named
 @SessionScoped
-public class CalculatorBean implements Serializable {
+public class CalculatorBean extends NotificationBroadcasterSupport implements Serializable, CalculatorMXBean {
 
     @Getter
     private double x;
@@ -22,6 +30,8 @@ public class CalculatorBean implements Serializable {
     @Setter
     @Getter
     private double r;
+
+    private long sequenceNumber = 1;
 
     @Setter
     @Getter
@@ -38,6 +48,7 @@ public class CalculatorBean implements Serializable {
         if (bigList == null) {
             bigList = new ArrayList<>();
         }
+        MBeanRegistryUtil.registerBean(this, "main");
     }
 
     public void reset() {
@@ -45,11 +56,35 @@ public class CalculatorBean implements Serializable {
         bigList.clear();
     }
 
+    public void destroy(@Observes @Destroyed(SessionScoped.class) Object unused) {
+        MBeanRegistryUtil.unregisterBean(this);
+    }
+
+    @Override
+    public MBeanNotificationInfo[] getNotificationInfo() {
+        var types = new String[] { AttributeChangeNotification.ATTRIBUTE_CHANGE };
+        var name = AttributeChangeNotification.class.getName();
+        var description = "The point is outside of area.";
+        var info = new MBeanNotificationInfo(types, name, description);
+        return new MBeanNotificationInfo[] { info };
+    }
+
     public String calc() {
         var point = new Point(x, y, r);
         point.calc();
+
         bigList.add(point);
         dbCommunicator.sendOne(point);
+
+        if (!point.isInsideArea()) {
+            var notification = new Notification(
+                    "Point is outside of area",
+                    getClass().getSimpleName(),
+                    sequenceNumber++,
+                    "Point is outside of area");
+            sendNotification(notification);
+        }
+
         return "update";
     }
 
@@ -59,5 +94,20 @@ public class CalculatorBean implements Serializable {
 
     public void setY(double y) {
         this.y = ((Long) Math.round(y * 1000)).doubleValue() / 1000;
+    }
+
+    @Override
+    public long getTotalPoints() {
+        return bigList.size();
+    }
+
+    @Override
+    public long getMissedPoints() {
+        return bigList.stream().filter(point -> !point.isInsideArea()).count();
+    }
+
+    @Override
+    public double getMissedPercentage() {
+        return (double) getMissedPoints() / getTotalPoints() * 100;
     }
 }
