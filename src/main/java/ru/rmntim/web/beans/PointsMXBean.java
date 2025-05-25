@@ -1,7 +1,6 @@
 package ru.rmntim.web.beans;
-
-public interface CalculatorMXBean {
+ 
+public interface PointsMXBean {
     long getTotalPoints();
     long getMissedPoints();
-    double getMissedPercentage();
 } 

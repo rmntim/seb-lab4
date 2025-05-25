@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.Destroyed;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,8 +22,7 @@ import javax.management.NotificationBroadcasterSupport;
 
 @Named
 @SessionScoped
-public class CalculatorBean extends NotificationBroadcasterSupport implements Serializable, CalculatorMXBean {
-
+public class PointsBean extends NotificationBroadcasterSupport implements Serializable, PointsMXBean {
     @Getter
     private double x;
     @Getter
@@ -38,6 +38,9 @@ public class CalculatorBean extends NotificationBroadcasterSupport implements Se
     private ArrayList<Point> bigList;
     private DBCommunicator dbCommunicator;
 
+    @Inject
+    private PercentageBean percentageBean;
+
     @PostConstruct
     public void init() {
         x = 0;
@@ -48,7 +51,7 @@ public class CalculatorBean extends NotificationBroadcasterSupport implements Se
         if (bigList == null) {
             bigList = new ArrayList<>();
         }
-        MBeanRegistryUtil.registerBean(this, "main");
+        MBeanRegistryUtil.registerBean(this, "points");
     }
 
     public void reset() {
@@ -85,6 +88,9 @@ public class CalculatorBean extends NotificationBroadcasterSupport implements Se
             sendNotification(notification);
         }
 
+        percentageBean.setTotalPoints(getTotalPoints());
+        percentageBean.setMissedPoints(getMissedPoints());
+
         return "update";
     }
 
@@ -105,9 +111,4 @@ public class CalculatorBean extends NotificationBroadcasterSupport implements Se
     public long getMissedPoints() {
         return bigList.stream().filter(point -> !point.isInsideArea()).count();
     }
-
-    @Override
-    public double getMissedPercentage() {
-        return (double) getMissedPoints() / getTotalPoints() * 100;
-    }
-}
+} 
